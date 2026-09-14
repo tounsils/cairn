@@ -1,0 +1,54 @@
+name: Deploy landing page
+
+# Publishes site/ to GitHub Pages. The repo keeps its docs/ folder for project
+# documentation, so Pages is fed from a workflow rather than from a branch
+# folder, which would force the site to live in docs/ and collide with it.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a running deploy finish rather than cancelling it; a half-published
+# landing page is worse than a slightly stale one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Guard against shipping a form that silently drops signups
+        run: |
+          # The page ships in preview mode on purpose. This only fails the
+          # build if FORM_ENDPOINT has been set to something malformed, which
+          # would look live and collect nothing.
+          if grep -qE 'const FORM_ENDPOINT = "https?://' site/index.html; then
+            echo "Form endpoint configured — live mode."
+          elif grep -q 'const FORM_ENDPOINT = "";' site/index.html; then
+            echo "::warning::FORM_ENDPOINT is empty. Page deploys in preview mode and will store nothing."
+          else
+            echo "::error::FORM_ENDPOINT is set to something that is not an http(s) URL."
+            exit 1
+          fi
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4

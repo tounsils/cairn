@@ -32,14 +32,37 @@ Web-game ad benchmarks run about $10 to $40 per thousand DAU per month. Puzzmo, 
 
 ## Running the landing page
 
-It is one file with no dependencies.
+One file. No build step, no package manager, no framework.
 
 ```bash
 python -m http.server 8000 --directory site
 # http://localhost:8000
 ```
 
-Deploy by copying `site/index.html` anywhere static: GitHub Pages, Vercel, Netlify, S3.
+It pulls three things from CDNs at runtime: MapLibre GL 4.7.1, Google Fonts, and MapLibre's own demo tiles. All three are verified reachable and all three degrade safely. If MapLibre fails to load or the tiles error, the map hides itself and the atmospheric gradient behind it carries the hero. The page never depends on the map to be readable.
+
+## Deploying to GitHub Pages
+
+`.github/workflows/pages.yml` publishes `site/` on every push to `main` that touches it. Pages is fed from the workflow rather than from a branch folder, because the branch-folder option would force the site into `docs/` and collide with the project documentation already there.
+
+One-time setup after the repo exists:
+
+1. **Settings → Pages → Source → GitHub Actions**
+2. Push to `main`, or run the workflow manually from the Actions tab.
+
+The workflow includes a guard: if `FORM_ENDPOINT` is set to anything that is not an `http(s)` URL it **fails the build**, and if it is empty it emits a warning saying the page will deploy in preview mode and store nothing. The failure mode being prevented is a page that looks live and quietly discards every signup.
+
+### Wiring the form
+
+The page ships in **preview mode**: `FORM_ENDPOINT` at the top of the inline script is empty, the form collects nothing, and it says so on submit. That is deliberate. A form that silently swallows real addresses is worse than one that admits it is not connected.
+
+To go live, set `FORM_ENDPOINT` to a JSON POST URL from Formspree, Tally or Buttondown. The page posts three fields:
+
+```json
+{ "email": "...", "crew": "...", "src": "reddit-geoguessr" }
+```
+
+`src` comes from the `?src=` query parameter, so **tag every link you post**. Per `docs/validation.md`, the personal-network number has to be reported separately from the cold number or a no gets read as a yes.
 
 ### Wiring the form
 
@@ -61,9 +84,17 @@ The second one is the test. An email is cheap politeness. Someone typing *"my br
 
 ## Design notes
 
-Nautical chart rather than travel brochure. Cool chart-paper ground with a structural teal, and a single warm signal orange used **only** on human elements: the people in the crew and the streak they keep. A cold instrument recording a warm ritual. Humanist sans display over a serif body, inverting the usual pairing, with mono for the instrument readouts. Contours are drawn on canvas rather than shipped as an image. One animated moment, the streak counter, because that is what the product is about.
+**Night earth.** One committed visual world: the planet seen from orbit at night. Family scattered across a dark globe is the emotional core of the product, so it is also the picture. Single-theme dark by choice, not omission.
 
-No fabricated numbers, no testimonials, no waitlist position, no referral mechanic. The audience for this is Reddit daily-puzzle regulars, who punish hype, so the page says outright that it is not built yet.
+Colour is assigned by meaning rather than decoration. **Amber is reserved for people** (avatars, the Navigator tag, the streak). **Cyan is reserved for data** (distances, arcs, the target beacon). The ground never competes with either.
+
+The hero image is **a real map**, not stock photography. MapLibre renders today's target in Lisbon with the three crew guesses pinned around it and dashed arcs bowing back to the answer, which is the product demonstrating itself. It is deliberately non-interactive so it cannot hijack a phone scroll. The target pulses like a beacon on a chart, and the whole view drifts slowly over fourteen seconds so the hero breathes without demanding attention.
+
+Type is **Bricolage Grotesque** for display and **Schibsted Grotesk** for body, with JetBrains Mono for readouts. Deliberately not Inter or Space Grotesk.
+
+Motion is orchestrated rather than scattered: a masked three-line headline rise, crew rows dealing in one at a time, distance counters ticking up, and scroll reveals via IntersectionObserver. Every bit of it collapses under `prefers-reduced-motion`.
+
+No fabricated numbers, no testimonials, no waitlist position, no referral mechanic. The audience is Reddit daily-puzzle regulars, who punish hype, so the page says outright that it is not built yet.
 
 ## Known blocker, shared with P-roadside
 
