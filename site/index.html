@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wayfare — the streak belongs to the crew</title>
+<meta name="description" content="A daily geography puzzle where the streak belongs to your group, not to you. One place a day, everyone guesses on their own time.">
+<meta property="og:title" content="Wayfare — the streak belongs to the crew">
+<meta property="og:description" content="A daily geography puzzle built for the group chat it was always played in.">
+<meta property="og:type" content="website">
+<style>
+/* ---------------------------------------------------------------------------
+   Tokens. Chart paper and deep water, with one warm signal colour reserved
+   exclusively for the human elements: people, and the streak they keep.
+   Everything structural is cold. That contrast is the whole idea.
+--------------------------------------------------------------------------- */
+:root {
+  --ground:     #E9EEEF;
+  --surface:    #F7FAFA;
+  --ink:        #10252B;
+  --ink-soft:   #4A6A72;
+  --rule:       #C2D2D5;
+  --deep:       #2E6E7E;
+  --accent:     #E2703A;
+  --accent-ink: #A8481A;
+  --accent-dim: #F2DACD;
+  --contour:    rgba(46,110,126,0.22);
+
+  --display: "Optima", "Candara", "Gill Sans", "Gill Sans MT", "Trebuchet MS", sans-serif;
+  --body: Charter, "Bitstream Charter", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
+
+  --measure: 63ch;
+  --step: clamp(1.6rem, 1.1rem + 1.6vw, 2.4rem);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground:     #081316;
+    --surface:    #0F1F23;
+    --ink:        #DCE8E9;
+    --ink-soft:   #8AA5AB;
+    --rule:       #1E363C;
+    --deep:       #4E97A8;
+    --accent:     #F0854D;
+    --accent-ink: #F4A175;
+    --accent-dim: #33200F;
+    --contour:    rgba(78,151,168,0.20);
+  }
+}
+:root[data-theme="dark"] {
+  --ground:     #081316;
+  --surface:    #0F1F23;
+  --ink:        #DCE8E9;
+  --ink-soft:   #8AA5AB;
+  --rule:       #1E363C;
+  --deep:       #4E97A8;
+  --accent:     #F0854D;
+  --accent-ink: #F4A175;
+  --accent-dim: #33200F;
+  --contour:    rgba(78,151,168,0.20);
+}
+:root[data-theme="light"] {
+  --ground:     #E9EEEF;
+  --surface:    #F7FAFA;
+  --ink:        #10252B;
+  --ink-soft:   #4A6A72;
+  --rule:       #C2D2D5;
+  --deep:       #2E6E7E;
+  --accent:     #E2703A;
+  --accent-ink: #A8481A;
+  --accent-dim: #F2DACD;
+  --contour:    rgba(46,110,126,0.22);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+#contours {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 1.5rem 5rem;
+}
+
+/* --- masthead ----------------------------------------------------------- */
+.masthead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.75rem 0 3.5rem;
+}
+.wordmark {
+  font-family: var(--display);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  margin: 0;
+}
+.coords {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- shared type -------------------------------------------------------- */
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--deep);
+  margin: 0 0 1rem;
+}
+h1 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(2.5rem, 1.6rem + 4.2vw, 4.25rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  margin: 0 0 1.5rem;
+}
+h2 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: var(--step);
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  margin: 0 0 1.25rem;
+}
+.lede {
+  font-size: 1.1875rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  max-width: var(--measure);
+  margin: 0 0 2.5rem;
+}
+p { max-width: var(--measure); }
+
+/* --- sections ----------------------------------------------------------- */
+.band {
+  padding: 4.5rem 0 0;
+  border-top: 1px solid var(--rule);
+  margin-top: 4.5rem;
+}
+.band:first-of-type { border-top: none; margin-top: 0; padding-top: 0; }
+
+/* --- the crew board: the thesis of the page ----------------------------- */
+.board {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  margin: 0 0 3rem;
+  overflow: hidden;
+}
+.board-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--rule);
+}
+.crew-name {
+  font-family: var(--display);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+}
+.streak {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.streak b {
+  font-family: var(--display);
+  font-size: 1.75rem;
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.board-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--rule);
+  font-variant-numeric: tabular-nums;
+}
+.rows { padding: 0.5rem 0; }
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto 7.5rem;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1.25rem;
+}
+.who {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+.pip {
+  width: 7px; height: 7px;
+  background: var(--accent);
+  flex: 0 0 auto;
+  transform: rotate(45deg);
+}
+.row.idle .pip { background: var(--rule); }
+.name {
+  font-size: 0.9375rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tag {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background: var(--accent-dim);
+  padding: 0.15rem 0.4rem;
+  white-space: nowrap;
+}
+.dist {
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.row.idle .dist { color: var(--ink-soft); }
+.gauge {
+  height: 6px;
+  background: var(--rule);
+  position: relative;
+  overflow: hidden;
+}
+.gauge > i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--deep);
+  width: 0;
+  transition: width 900ms cubic-bezier(.22,.8,.3,1);
+}
+.row.best .gauge > i { background: var(--accent); }
+.board-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1.25rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.board-foot b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* --- the day, as a genuine sequence ------------------------------------- */
+.steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+.steps li { max-width: 26rem; }
+.steps .n {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  color: var(--accent-ink);
+  padding-bottom: 0.625rem;
+  margin-bottom: 0.875rem;
+  border-bottom: 1px solid var(--rule);
+}
+.steps h3 {
+  font-family: var(--display);
+  font-size: 1.125rem;
+  letter-spacing: 0.02em;
+  margin: 0 0 0.5rem;
+}
+.steps p { margin: 0; color: var(--ink-soft); font-size: 0.9375rem; }
+
+/* --- rules -------------------------------------------------------------- */
+.rules { display: grid; gap: 0; margin-top: 0.5rem; }
+.rule-item {
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  gap: 0.5rem 2.5rem;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.rule-item:first-child { border-top: 1px solid var(--rule); }
+.rule-item h3 {
+  font-family: var(--display);
+  font-size: 1.0625rem;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+.rule-item p { margin: 0; color: var(--ink-soft); font-size: 0.9375rem; }
+
+/* --- signup ------------------------------------------------------------- */
+.signup {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  padding: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  margin-top: 1rem;
+}
+.field { display: block; margin-bottom: 1.25rem; }
+.field > span {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--deep);
+  margin-bottom: 0.5rem;
+}
+.field .hint {
+  display: block;
+  font-family: var(--body);
+  font-size: 0.875rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-soft);
+  margin-top: 0.375rem;
+}
+input[type="email"], textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 1rem;
+  color: var(--ink);
+  background: var(--ground);
+  border: 1px solid var(--rule);
+  padding: 0.75rem 0.875rem;
+  border-radius: 0;
+}
+textarea { resize: vertical; min-height: 4.5rem; line-height: 1.5; }
+input:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+button {
+  font-family: var(--display);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ground);
+  background: var(--ink);
+  border: 1px solid var(--ink);
+  padding: 0.8125rem 1.5rem;
+  cursor: pointer;
+  border-radius: 0;
+  transition: background 160ms ease, color 160ms ease;
+}
+button:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.note {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin: 1rem 0 0;
+  max-width: 40rem;
+}
+.result {
+  border-left: 3px solid var(--accent);
+  padding: 0.25rem 0 0.25rem 1rem;
+  margin-top: 1.25rem;
+  font-size: 0.9375rem;
+}
+.result:empty { display: none; }
+
+/* --- straight talk ------------------------------------------------------ */
+.plain {
+  border-left: 3px solid var(--deep);
+  padding-left: 1.25rem;
+}
+.plain p:last-child { margin-bottom: 0; }
+
+footer {
+  margin-top: 4.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 34rem) {
+  .row { grid-template-columns: 1fr auto; }
+  .row .gauge { grid-column: 1 / -1; }
+  .rule-item { grid-template-columns: 1fr; }
+  .masthead { padding-bottom: 2.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+<canvas id="contours" aria-hidden="true"></canvas>
+
+<div class="page">
+  <header class="masthead">
+    <p class="wordmark">Wayfare</p>
+    <p class="coords">33.1581&deg;N 117.3506&deg;W</p>
+  </header>
+
+  <main>
+    <section class="band">
+      <p class="eyebrow">One place a day &middot; played in crews</p>
+      <h1>The streak belongs to the crew.</h1>
+      <p class="lede">
+        A daily geography puzzle built for the group chat it was always played in.
+        One place a day, everyone guesses on their own time, and the run you are
+        protecting is your family&rsquo;s rather than your own.
+      </p>
+
+      <div class="board">
+        <div class="board-head">
+          <span class="crew-name">The Long Way Home</span>
+          <span class="streak"><b id="streakNum">0</b> day streak</span>
+        </div>
+        <div class="board-meta">
+          <span>Round 147</span>
+          <span>Closes in 4h 12m</span>
+        </div>
+        <div class="rows">
+          <div class="row best">
+            <span class="who"><i class="pip"></i><span class="name">Amira</span><span class="tag">Navigator</span></span>
+            <span class="dist">38 km</span>
+            <span class="gauge"><i data-fill="94%"></i></span>
+          </div>
+          <div class="row">
+            <span class="who"><i class="pip"></i><span class="name">Karim</span></span>
+            <span class="dist">412 km</span>
+            <span class="gauge"><i data-fill="61%"></i></span>
+          </div>
+          <div class="row">
+            <span class="who"><i class="pip"></i><span class="name">Nadia</span></span>
+            <span class="dist">1,204 km</span>
+            <span class="gauge"><i data-fill="24%"></i></span>
+          </div>
+          <div class="row idle">
+            <span class="who"><i class="pip"></i><span class="name">You</span></span>
+            <span class="dist">not played</span>
+            <span class="gauge"><i data-fill="0%"></i></span>
+          </div>
+        </div>
+        <div class="board-foot">
+          <span>Crew score counts the best <b>3</b> of <b>4</b></span>
+          <span>Two players keep the streak</span>
+        </div>
+      </div>
+
+      <form class="signup" id="signup" novalidate>
+        <label class="field" for="email">
+          <span>Your email</span>
+          <input type="email" id="email" name="email" autocomplete="email" placeholder="you@example.com" required>
+        </label>
+        <label class="field" for="crew">
+          <span>Who would you play with?</span>
+          <input type="text" id="crew" name="crew" placeholder="my brother in Tunis, my wife, my daughter">
+          <span class="hint">Optional, and the part I actually care about. Names, relationships, wherever they live.</span>
+        </label>
+        <button type="submit">Send me one message</button>
+        <p class="result" id="result" role="status" aria-live="polite"></p>
+        <p class="note">
+          One email when there is something to play. No launch countdown, no newsletter,
+          no forwarding your address to anyone.
+        </p>
+      </form>
+    </section>
+
+    <section class="band">
+      <h2>How a day runs</h2>
+      <ol class="steps">
+        <li>
+          <span class="n">01 &middot; 00:00</span>
+          <h3>A place drops</h3>
+          <p>The same place for every crew on earth. Shared scarcity is the reason the daily format works at all.</p>
+        </li>
+        <li>
+          <span class="n">02 &middot; ALL DAY</span>
+          <h3>Everyone guesses</h3>
+          <p>Privately, on their own time, inside your crew&rsquo;s day. Six time zones between you is fine. Nobody has to be awake at once.</p>
+        </li>
+        <li>
+          <span class="n">03 &middot; 23:59</span>
+          <h3>The day closes</h3>
+          <p>Everything reveals together, the best three scores count, and the streak moves. Somebody gets told they were the Navigator.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="band">
+      <h2>Three rules, and the reasons</h2>
+      <div class="rules">
+        <div class="rule-item">
+          <h3>Best three count</h3>
+          <p>Averaging punishes a crew for having a casual member, which is exactly the person you want to keep. One bad guess never sinks the day.</p>
+        </div>
+        <div class="rule-item">
+          <h3>Two players keep it alive</h3>
+          <p>Requiring everyone would mean one person catching a flight ends a streak the whole family built. Hard to keep, harder to lose.</p>
+        </div>
+        <div class="rule-item">
+          <h3>Nobody comes last</h3>
+          <p>Navigator, Scout, Anchor, Wildcard. Recognition is categorical, not a ranking, so there is no seat at the table reserved for whoever is worst.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="band">
+      <h2>Where this actually is</h2>
+      <div class="plain">
+        <p>
+          It is not built. This page exists to find out whether the crew part is worth
+          building, and it is the honest first step rather than a soft launch.
+        </p>
+        <p>
+          There is no waitlist position, no referral mechanic, and no number on this page
+          telling you how many people are ahead of you. If enough people can picture their
+          crew, I build it. If they cannot, I will say so and this page comes down.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>Wayfare &middot; working name</span>
+    <span>An experiment, not a product</span>
+  </footer>
+</div>
+
+<script>
+"use strict";
+
+/* ---------------------------------------------------------------------------
+   Form endpoint. Set this to a Formspree / Tally / Buttondown POST URL to go
+   live. Left empty the page runs in preview mode and collects nothing, which
+   is the correct default: an unconfigured form that silently swallows real
+   addresses is worse than one that admits it is not wired up.
+--------------------------------------------------------------------------- */
+const FORM_ENDPOINT = "";
+
+/* --- contour field ------------------------------------------------------- */
+(function contours() {
+  const canvas = document.getElementById("contours");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  function draw() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = getComputedStyle(document.documentElement)
+      .getPropertyValue("--contour").trim() || "rgba(46,110,126,0.2)";
+    ctx.lineWidth = 1;
+
+    // Concentric irregular rings around an off-canvas focus, the way a chart
+    // renders a landmass falling away into depth soundings.
+    const cx = w * 0.82;
+    const cy = h * 0.16;
+    const rings = 26;
+
+    for (let i = 1; i <= rings; i++) {
+      const base = i * Math.max(w, h) * 0.035;
+      ctx.beginPath();
+      for (let a = 0; a <= Math.PI * 2 + 0.01; a += 0.06) {
+        // Sum of sines gives an organic, non-repeating coastline without
+        // pulling in a noise library.
+        const wobble =
+          Math.sin(a * 3 + i * 0.7) * base * 0.06 +
+          Math.sin(a * 5 - i * 0.4) * base * 0.035 +
+          Math.sin(a * 2 + i * 1.3) * base * 0.05;
+        const r = base + wobble;
+        const x = cx + Math.cos(a) * r;
+        const y = cy + Math.sin(a) * r * 0.78;
+        if (a === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.globalAlpha = i % 5 === 0 ? 1 : 0.45;
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  draw();
+  let t;
+  window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(draw, 150); });
+  if (window.matchMedia) {
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    mq.addEventListener && mq.addEventListener("change", () => setTimeout(draw, 50));
+  }
+  new MutationObserver(() => setTimeout(draw, 50))
+    .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+})();
+
+/* --- the one animated moment: the thing the product is about ------------- */
+(function streak() {
+  const el = document.getElementById("streakNum");
+  const target = 23;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  document.querySelectorAll(".gauge > i").forEach((bar) => {
+    const fill = bar.getAttribute("data-fill");
+    if (reduce) { bar.style.width = fill; return; }
+    requestAnimationFrame(() => setTimeout(() => { bar.style.width = fill; }, 220));
+  });
+
+  if (reduce) { el.textContent = String(target); return; }
+  const start = performance.now();
+  const dur = 900;
+  function tick(now) {
+    const p = Math.min(1, (now - start) / dur);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = String(Math.round(eased * target));
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+
+/* --- signup -------------------------------------------------------------- */
+(function signup() {
+  const form = document.getElementById("signup");
+  const out = document.getElementById("result");
+  const src = new URLSearchParams(location.search).get("src") || "direct";
+
+  form.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const email = form.email.value.trim();
+    const crew = form.crew.value.trim();
+
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      out.textContent = "That email address does not look complete. Check it and try again.";
+      form.email.focus();
+      return;
+    }
+
+    if (!FORM_ENDPOINT) {
+      out.textContent =
+        "Preview mode: nothing was sent and nothing was stored. Set FORM_ENDPOINT in the page source to collect signups.";
+      console.info("would submit:", { email, crew, src });
+      return;
+    }
+
+    out.textContent = "Sending…";
+    try {
+      const res = await fetch(FORM_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ email, crew, src }),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      form.querySelector("button").disabled = true;
+      out.textContent = crew
+        ? "Got it. One message when there is something for you and " + crew + " to play."
+        : "Got it. One message when there is something to play.";
+    } catch (err) {
+      out.textContent =
+        "That did not send (" + err.message + "). Nothing was saved, so it is worth trying once more.";
+    }
+  });
+})();
+</script>
+</body>
+</html>

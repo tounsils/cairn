@@ -1,0 +1,13 @@
+node_modules/
+.next/
+.next-build/
+dist/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Signup exports contain real email addresses. Never commit them.
+signups*.csv
+signups*.json
+*.local
