@@ -15,7 +15,7 @@ A one-page site that describes the crew concept, shows the mechanic, and asks fo
 1. an email address
 2. **"Who would you play with?"** (free text, optional)
 
-Field 2 is the actual experiment. An email is a weak signal that can be given out of politeness. Someone typing *"my brother in Tunis, my wife, and my daughter"* has done the mental work of picturing their crew, and that is the behaviour being tested. **The text answers are worth more than the email count.**
+Field 2 is the actual experiment. An email is a weak signal that can be given out of politeness. Someone typing *"my dad in Ohio, my sister in Seattle, and my college roommate"* has done the mental work of picturing their crew, and that is the behaviour being tested. **The text answers are worth more than the email count.**
 
 ## Decision criteria, set in advance
 

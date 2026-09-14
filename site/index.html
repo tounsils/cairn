@@ -369,25 +369,25 @@ footer {
           <div class="board-head">
             <div class="crew-id">
               <b>The Long Way Home</b>
-              <span>4 members · 3 countries</span>
+              <span>4 members · 3 time zones</span>
             </div>
             <div class="streak"><b id="streakNum">0</b><span>day streak</span></div>
           </div>
           <div class="rows">
             <div class="row">
-              <span class="av">AM</span>
-              <span class="who"><b>Amira</b><i>Navigator</i></span>
-              <span class="reading"><b data-to="38">0</b><span>km off</span></span>
+              <span class="av">DA</span>
+              <span class="who"><b>Dad</b><i>Navigator</i></span>
+              <span class="reading"><b data-to="22">0</b><span>mi off</span></span>
             </div>
             <div class="row">
-              <span class="av">KA</span>
-              <span class="who"><b>Karim</b></span>
-              <span class="reading"><b data-to="412">0</b><span>km off</span></span>
+              <span class="av">SA</span>
+              <span class="who"><b>Sarah</b></span>
+              <span class="reading"><b data-to="262">0</b><span>mi off</span></span>
             </div>
             <div class="row">
-              <span class="av">NA</span>
-              <span class="who"><b>Nadia</b></span>
-              <span class="reading"><b data-to="1204">0</b><span>km off</span></span>
+              <span class="av">TY</span>
+              <span class="who"><b>Tyler</b></span>
+              <span class="reading"><b data-to="683">0</b><span>mi off</span></span>
             </div>
             <div class="row idle">
               <span class="av">YO</span>
@@ -484,7 +484,7 @@ footer {
         </label>
         <label class="field" for="crew">
           <span>Your crew</span>
-          <input type="text" id="crew" name="crew" placeholder="my brother in Tunis, my wife, my daughter">
+          <input type="text" id="crew" name="crew" placeholder="my dad in Ohio, my sister in Seattle, my college roommate">
           <span class="hint">Optional, and the part I actually care about. Names, relationships, wherever they live.</span>
         </label>
         <button class="btn btn-primary" type="submit">Send me one message →</button>
@@ -559,12 +559,15 @@ const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const el = document.getElementById("map");
   if (typeof maplibregl === "undefined") return;   // page still works without it
 
-  // Today's target and the crew's guesses. Distances match the board.
+  // Today's target and the crew's guesses. The mile figures on the board are
+  // real great-circle distances from these coordinates, not decoration — if
+  // you move a pin, recompute them, or an eagle-eyed geography player will
+  // notice the map and the numbers disagreeing.
   const TARGET = [-9.139, 38.722];                 // Lisbon
   const GUESSES = [
-    { who: "Amira", at: [-9.42, 38.95] },
-    { who: "Karim", at: [-4.52, 40.02] },
-    { who: "Nadia", at: [0.62, 45.48] },
+    { who: "Dad",   at: [-9.42, 38.95] },   //  22 mi off
+    { who: "Sarah", at: [-4.52, 40.02] },   // 262 mi off
+    { who: "Tyler", at: [ 0.62, 45.48] },   // 683 mi off
   ];
 
   const map = new maplibregl.Map({

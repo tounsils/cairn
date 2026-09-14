@@ -33,7 +33,9 @@ This launches to Reddit daily-puzzle communities, who punish hype and are the wh
 
 ## The metric that actually decides this
 
-Not the signup count. The free-text answers to **"Who would you play with?"** Somebody naming their brother in Tunis has done the mental work the product depends on. Under 20% naming a crew is a kill regardless of volume.
+Not the signup count. The free-text answers to **"Who would you play with?"** Somebody naming their dad in Ohio and their college roommate has done the mental work the product depends on. Under 20% naming a crew is a kill regardless of volume.
+
+Copy and demo data target a **US audience** — the launch channels in `docs/validation.md` are US-heavy Reddit communities. Names read American, distances are in **miles**, and the crew line says time zones rather than countries. If the demo distances change, recheck them against the map coordinates in the `GUESSES` array; the numbers on the board and the arcs on the map have to agree.
 
 ## Content pipeline, when it exists
 

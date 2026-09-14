@@ -76,7 +76,7 @@ To go live, set `FORM_ENDPOINT` to a JSON POST URL from Formspree, Tally or Butt
 
 The form asks for an email and for **"Who would you play with?"**
 
-The second one is the test. An email is cheap politeness. Someone typing *"my brother in Tunis, my wife, my daughter"* has pictured their crew, which is the exact behaviour the product depends on. **The text answers matter more than the signup count**, and the kill criterion is written against them: any volume with under 20% naming a crew means people want a puzzle, not a crew, and the differentiator has not landed.
+The second one is the test. An email is cheap politeness. Someone typing *"my dad in Ohio, my sister in Seattle, my college roommate"* has pictured their crew, which is the exact behaviour the product depends on. **The text answers matter more than the signup count**, and the kill criterion is written against them: any volume with under 20% naming a crew means people want a puzzle, not a crew, and the differentiator has not landed.
 
 ## Design notes
 
