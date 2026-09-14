@@ -25,7 +25,9 @@ param(
   [string]$Region      = "us-west-1",
   [string]$NotifyEmail = "tounsils@gmail.com",
   [string]$Origin      = "https://tounsils.github.io",
-  [string]$Name        = "cairn-signup"
+  [string]$Name        = "cairn-signup",
+  [int]$MaxConcurrency = 3,
+  [int]$LogRetentionDays = 14
 )
 
 $ErrorActionPreference = "Stop"
@@ -137,10 +139,20 @@ if ($fnExists) {
   Write-Host "    created"
 }
 
-# A public endpoint with no ceiling is a blank cheque. Ten concurrent
-# executions is far more than a landing page needs and caps the blast radius
-# of anyone deciding to hammer it.
-aws-cli lambda put-function-concurrency --function-name $Name --reserved-concurrent-executions 10 | Out-Null
+# A public endpoint with no ceiling is a blank cheque. Reserved concurrency is
+# the cost cap: it bounds how fast anyone hammering the endpoint can spend your
+# money. Three is ample for a landing page and holds the theoretical worst case
+# (someone pinning it flat out for a month) to roughly $35 rather than $130.
+aws-cli lambda put-function-concurrency --function-name $Name --reserved-concurrent-executions $MaxConcurrency | Out-Null
+Write-Host "    concurrency capped at $MaxConcurrency"
+
+# Lambda log groups default to NEVER EXPIRE, which is the classic way an AWS
+# account quietly accrues storage charges for years. Create it explicitly with
+# a retention policy rather than letting Lambda create it unbounded.
+$logGroup = "/aws/lambda/$Name"
+try { aws-cli logs create-log-group --log-group-name $logGroup | Out-Null } catch {}
+aws-cli logs put-retention-policy --log-group-name $logGroup --retention-in-days $LogRetentionDays | Out-Null
+Write-Host "    logs retained $LogRetentionDays days (default is forever)"
 
 # --- 6. Function URL ----------------------------------------------------------
 say "Function URL"
