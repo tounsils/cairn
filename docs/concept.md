@@ -1,6 +1,6 @@
 # Concept spec
 
-Working name: **WAYFARE**. Placeholder. Pick the real one before any money is spent on a domain.
+Working name: **CAIRN**. Placeholder. Pick the real one before any money is spent on a domain.
 
 ---
 

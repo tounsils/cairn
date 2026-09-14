@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Wayfare — the streak belongs to the crew</title>
+<title>Cairn — the streak belongs to the crew</title>
 <meta name="description" content="A daily geography puzzle where the streak belongs to your group, not to you. One place a day, everyone guesses on their own time.">
 <meta name="theme-color" content="#05070D">
-<meta property="og:title" content="Wayfare — the streak belongs to the crew">
+<meta property="og:title" content="Cairn — the streak belongs to the crew">
 <meta property="og:description" content="A daily geography puzzle built for the group chat it was always played in.">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
@@ -111,8 +111,13 @@ p  { margin: 0 0 1rem; max-width: var(--measure); }
   display: flex; align-items: center; justify-content: space-between; gap: 1rem;
   padding-block: 1.5rem;
 }
-.mark { font-family: var(--display); font-weight: 800; font-size: 1.125rem; letter-spacing: 0.02em; }
-.mark span { color: var(--amber); }
+.mark {
+  display: inline-flex; align-items: center; gap: 0.55rem;
+  font-family: var(--display); font-weight: 800; font-size: 1.125rem; letter-spacing: 0.08em;
+}
+/* Stacked stones, one per person who showed up. The top stone is cyan
+   because it is the one still being placed. */
+.mark svg { width: 1.05rem; height: 1.225rem; flex: 0 0 auto; }
 .live {
   display: inline-flex; align-items: center; gap: 0.5rem;
   font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.16em;
@@ -326,7 +331,16 @@ footer {
     <div id="map" role="img" aria-label="World map showing today's location and where each crew member guessed"></div>
 
     <div class="wrap topbar">
-      <div class="mark">WAY<span>FARE</span></div>
+      <div class="mark">
+        <svg viewBox="0 0 24 28" aria-hidden="true" focusable="false">
+          <ellipse cx="12" cy="24.2" rx="9"   ry="2.9" fill="#FFB25C" opacity=".95"/>
+          <ellipse cx="12" cy="18.4" rx="6.8" ry="2.5" fill="#FFB25C" opacity=".78"/>
+          <ellipse cx="12" cy="13.2" rx="5"   ry="2.1" fill="#FFB25C" opacity=".60"/>
+          <ellipse cx="12" cy="8.8"  rx="3.4" ry="1.7" fill="#FFB25C" opacity=".42"/>
+          <ellipse cx="12" cy="5.2"  rx="2"   ry="1.2" fill="#5BE1D6" opacity=".85"/>
+        </svg>
+        <span>CAIRN</span>
+      </div>
       <div class="live"><i class="blip"></i> Round 147 · live</div>
     </div>
 
@@ -421,6 +435,7 @@ footer {
     <section class="band wrap">
       <p class="eyebrow reveal">Three rules, and why</p>
       <h2 class="reveal d1">Built so the streak<br>is hard to lose.</h2>
+      <p class="lede reveal d2">A cairn is a stack of stones travellers build one at a time to mark the path for whoever comes next. Nobody builds one alone, and every stone was put there by somebody who showed up. Each rule below follows from that.</p>
 
       <div class="rules">
         <article class="rule reveal d1">
@@ -480,7 +495,7 @@ footer {
   </main>
 
   <footer class="wrap">
-    <span>WAYFARE · working name</span>
+    <span>CAIRN</span>
     <span>An experiment, not a product</span>
   </footer>
 </div>

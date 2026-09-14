@@ -1,4 +1,4 @@
-# Wayfare (working name) — project instructions
+# Cairn — project instructions
 
 A daily geography puzzle where the account is a **crew**, not a person.
 

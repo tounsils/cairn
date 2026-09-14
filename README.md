@@ -1,4 +1,4 @@
-# Wayfare (working name)
+# Cairn
 
 A daily geography puzzle where the account is a **crew**, not a person, and the streak belongs to the crew.
 
@@ -28,7 +28,15 @@ Web-game ad benchmarks run about $10 to $40 per thousand DAU per month. Puzzmo, 
 | [`docs/concept.md`](docs/concept.md) | The spec. Crew model, scoring, the streak rule, gamification, pricing, content pipeline. |
 | [`docs/validation.md`](docs/validation.md) | The test, with go/no-go numbers **set in advance**. |
 | [`docs/research.md`](docs/research.md) | What the research actually found, with sources and a note on which numbers to trust. |
-| [`site/index.html`](site/index.html) | The validation landing page. Self-contained, no build step, no CDN. |
+| [`site/index.html`](site/index.html) | The validation landing page. One file, no build step. |
+
+## Why "Cairn"
+
+A cairn is a stack of stones that travellers build one at a time to mark a path for whoever comes next. **Nobody builds one alone, and every stone was put there by somebody who showed up.** That is the crew streak, exactly.
+
+Practical reasons it beat the alternatives: five letters, types fast into a group chat, and it avoids the two traps in this category. Anything ending in `-le` or `-dle` is both exhausted and legally exposed, since NYT has been aggressive about Wordle-derivative marks. And the earlier placeholder "Wayfare" had to go regardless of taste, because *Wayfair* is a multi-billion-dollar retailer and a near-homophone, which loses every search and inherits trademark risk.
+
+**Not cleared for trademark.** Cairn is a common noun with users in unrelated classes (energy, academic publishing). Run a proper search before buying a domain or filing anything.
 
 ## Running the landing page
 
@@ -51,18 +59,6 @@ One-time setup after the repo exists:
 2. Push to `main`, or run the workflow manually from the Actions tab.
 
 The workflow includes a guard: if `FORM_ENDPOINT` is set to anything that is not an `http(s)` URL it **fails the build**, and if it is empty it emits a warning saying the page will deploy in preview mode and store nothing. The failure mode being prevented is a page that looks live and quietly discards every signup.
-
-### Wiring the form
-
-The page ships in **preview mode**: `FORM_ENDPOINT` at the top of the inline script is empty, the form collects nothing, and it says so on submit. That is deliberate. A form that silently swallows real addresses is worse than one that admits it is not connected.
-
-To go live, set `FORM_ENDPOINT` to a JSON POST URL from Formspree, Tally or Buttondown. The page posts three fields:
-
-```json
-{ "email": "...", "crew": "...", "src": "reddit-geoguessr" }
-```
-
-`src` comes from the `?src=` query parameter, so **tag every link you post**. Per `docs/validation.md`, the personal-network number has to be reported separately from the cold number or a no gets read as a yes.
 
 ### Wiring the form
 
