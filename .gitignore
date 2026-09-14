@@ -11,3 +11,7 @@ Thumbs.db
 signups*.csv
 signups*.json
 *.local
+
+# AWS build artefacts
+infra/aws/build/
+infra/aws/*.zip

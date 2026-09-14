@@ -1,0 +1,19 @@
+{
+  "name": "cairn",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A daily geography puzzle where the streak belongs to the crew. Validation stage.",
+  "license": "MIT",
+  "author": "Ilyes Tounsi <tounsils@gmail.com>",
+  "scripts": {
+    "test": "node --test \"infra/test/**/*.test.mjs\"",
+    "check": "npm run lint && npm test",
+    "lint": "node scripts/check.mjs",
+    "serve": "node --run serve:py || python -m http.server 8000 --directory site",
+    "serve:py": "python -m http.server 8000 --directory site"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

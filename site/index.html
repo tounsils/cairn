@@ -301,6 +301,9 @@ input, textarea {
 input::placeholder, textarea::placeholder { color: var(--faint); }
 input:focus, textarea:focus { outline: none; border-color: var(--amber); background: rgba(0,0,0,0.5); }
 :focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+/* Honeypot: off-screen rather than display:none, which bots increasingly
+   detect and skip. Real people never see it or tab into it. */
+.trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 .result { margin: 1.1rem 0 0; font-size: 0.9375rem; color: var(--cyan); min-height: 1.4rem; }
 .note { font-family: var(--mono); font-size: 0.68rem; line-height: 1.7; color: var(--faint); margin: 1rem 0 0; }
 
@@ -487,6 +490,12 @@ footer {
           <input type="text" id="crew" name="crew" placeholder="my dad in Ohio, my sister in Seattle, my college roommate">
           <span class="hint">Optional, and the part I actually care about. Names, relationships, wherever they live.</span>
         </label>
+        <!-- Honeypot. Hidden from people, irresistible to bots that fill every
+             input on a page. Not display:none, which some bots detect. -->
+        <div class="trap" aria-hidden="true">
+          <label for="website">Website</label>
+          <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+        </div>
         <button class="btn btn-primary" type="submit">Send me one message →</button>
         <p class="result" id="result" role="status" aria-live="polite"></p>
         <p class="note">One email when there is something to play. No countdown, no newsletter, no forwarding your address to anyone.</p>
@@ -720,39 +729,73 @@ const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 (function signup() {
   const form = document.getElementById("signup"), out = document.getElementById("result");
   const src = new URLSearchParams(location.search).get("src") || "direct";
+  const openedAt = Date.now();   // feeds the server-side time trap
+
+  const say = (msg, bad) => { out.style.color = bad ? "#FF8A3D" : ""; out.textContent = msg; };
 
   form.addEventListener("submit", async (ev) => {
     ev.preventDefault();
-    const email = form.email.value.trim(), crew = form.crew.value.trim();
+    const email = form.email.value.trim();
+    const crew = form.crew.value.trim();
 
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      out.style.color = "#FF8A3D";
-      out.textContent = "That email address does not look complete. Check it and try again.";
-      form.email.focus(); return;
-    }
-    out.style.color = "";
-
-    if (!FORM_ENDPOINT) {
-      out.textContent = "Preview mode: nothing was sent and nothing was stored. Set FORM_ENDPOINT in the page source to collect signups.";
-      console.info("would submit:", { email, crew, src });
+      say("That email address does not look complete. Check it and try again.", true);
+      form.email.focus();
       return;
     }
 
-    out.textContent = "Sending…";
+    const body = JSON.stringify({
+      email, crew, src,
+      website: form.website.value,      // honeypot; a person leaves this empty
+      elapsedMs: Date.now() - openedAt,
+      ua: navigator.userAgent.slice(0, 200),
+    });
+
+    if (!FORM_ENDPOINT) {
+      say("Preview mode: nothing was sent and nothing was stored. Set FORM_ENDPOINT in the page source to collect signups.");
+      console.info("would submit:", JSON.parse(body));
+      return;
+    }
+
+    say("Sending…");
+    const done = () => {
+      form.querySelector("button").disabled = true;
+      say(crew
+        ? "Got it. One message when there is something for you and " + crew + " to play."
+        : "Got it. One message when there is something to play.");
+    };
+
+    // text/plain, not application/json. That keeps this a CORS "simple
+    // request" with no preflight, which is what lets the same code work
+    // against a Lambda Function URL and a Google Apps Script web app. Both
+    // read the raw body and parse it themselves.
     try {
       const res = await fetch(FORM_ENDPOINT, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ email, crew, src }),
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body,
+        redirect: "follow",
       });
       if (!res.ok) throw new Error("HTTP " + res.status);
-      form.querySelector("button").disabled = true;
-      out.textContent = crew
-        ? "Got it. One message when there is something for you and " + crew + " to play."
-        : "Got it. One message when there is something to play.";
+      let payload = null;
+      try { payload = await res.json(); } catch { /* opaque or non-JSON; treat as sent */ }
+      if (payload && payload.ok === false) { say(payload.error || "That did not go through.", true); return; }
+      done();
     } catch (err) {
-      out.style.color = "#FF8A3D";
-      out.textContent = "That did not send (" + err.message + "). Nothing was saved, so it is worth trying once more.";
+      // Apps Script answers a POST with a cross-origin redirect, and some
+      // browsers refuse to expose that response even though the write landed.
+      // Retry opaquely: we lose the ability to read the reply, not the signup.
+      try {
+        await fetch(FORM_ENDPOINT, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body,
+        });
+        done();
+      } catch (err2) {
+        say("That did not send (" + err2.message + "). Nothing was saved, so it is worth trying once more.", true);
+      }
     }
   });
 })();
