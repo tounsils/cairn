@@ -32,19 +32,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Guard against shipping a form that silently drops signups
+      - name: Guard against shipping a page that measures nothing
         run: |
-          # The page ships in preview mode on purpose. This only fails the
-          # build if FORM_ENDPOINT has been set to something malformed, which
-          # would look live and collect nothing.
-          if grep -qE 'const FORM_ENDPOINT = "https?://' site/index.html; then
-            echo "Form endpoint configured — live mode."
-          elif grep -q 'const FORM_ENDPOINT = "";' site/index.html; then
-            echo "::warning::FORM_ENDPOINT is empty. Page deploys in preview mode and will store nothing."
-          else
-            echo "::error::FORM_ENDPOINT is set to something that is not an http(s) URL."
+          # The game is useless without an API to score against, and a broken
+          # constant would still render a perfectly convincing map.
+          if ! grep -qE 'const API = "https://[^"]+";' site/index.html; then
+            echo "::error::site/index.html has no valid https API endpoint."
             exit 1
           fi
+          echo "API endpoint configured."
+
+      - name: Guard against leaking the answer into the page
+        run: |
+          # The coordinates live on the server and are returned only after a
+          # guess is committed. If they ever appear in the client, anyone can
+          # read the answer from devtools and every crew board becomes
+          # meaningless. `npm run lint` checks this too; this is the copy that
+          # cannot be skipped by forgetting to run it.
+          if grep -qE '3\.0026|16\.7666' site/*.html; then
+            echo "::error::Round coordinates found in page source. The answer must stay server-side."
+            exit 1
+          fi
+          echo "Answer is not in the client."
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
