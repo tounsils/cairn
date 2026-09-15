@@ -28,27 +28,54 @@ if (!existsSync(wrangler)) {
   process.exit(1);
 }
 
-// Run wrangler's JS with this Node binary. `npx` is `npx.cmd` on Windows and
-// modern Node refuses to spawn `.cmd` without a shell; `shell: true` then
-// concatenates arguments instead of escaping them. Calling the JS avoids both.
-const run = spawnSync(
-  process.execPath,
-  [
-    wrangler,
-    "d1",
-    "execute",
-    "cairn",
-    "--remote",
-    "--json",
-    "--command",
-    "SELECT email, crew, src, named_a_crew, country, ts FROM signups ORDER BY ts",
-  ],
-  { cwd: join(root, "infra", "cloudflare"), encoding: "utf8" },
-);
+const QUERY = "SELECT email, crew, src, named_a_crew, country, ts FROM signups ORDER BY ts";
 
-if (run.status !== 0) {
-  console.error(run.stderr || "wrangler failed");
-  process.exit(run.status ?? 1);
+/**
+ * Run wrangler's JS with this Node binary. `npx` is `npx.cmd` on Windows and
+ * modern Node refuses to spawn `.cmd` without a shell; `shell: true` then
+ * concatenates arguments instead of escaping them. Calling the JS avoids both.
+ */
+function runWrangler() {
+  return spawnSync(
+    process.execPath,
+    [wrangler, "d1", "execute", "cairn", "--remote", "--json", "--command", QUERY],
+    { cwd: join(root, "infra", "cloudflare"), encoding: "utf8" },
+  );
+}
+
+/**
+ * One retry, because the D1 HTTP API blips occasionally and a transient
+ * failure should not look like a broken script. Two in a row is a real fault
+ * and gets reported in full.
+ */
+let run = runWrangler();
+if (run.status !== 0 || run.error) {
+  run = runWrangler();
+}
+
+if (run.status !== 0 || run.error) {
+  // Report everything. The previous version printed `stderr || "wrangler
+  // failed"`, and wrangler writes most of its output to stdout, so a real
+  // failure surfaced as four words and nothing to act on.
+  console.error("\n  Could not read the database.\n");
+  console.error(`  exit status : ${run.status ?? "none (process did not start)"}`);
+  if (run.signal) console.error(`  signal      : ${run.signal}`);
+  if (run.error) console.error(`  spawn error : ${run.error.message}`);
+
+  const out = (run.stdout ?? "").trim();
+  const err = (run.stderr ?? "").trim();
+  if (err) console.error(`\n  --- stderr ---\n${err.slice(0, 1500)}`);
+  if (out) console.error(`\n  --- stdout ---\n${out.slice(0, 1500)}`);
+  if (!err && !out) {
+    console.error(`
+  Both streams were empty, which usually means a transient Cloudflare API
+  failure. It already retried once. Try again in a moment; if it persists:
+
+    npx wrangler whoami                 # is the session still valid?
+    npx wrangler d1 info cairn          # does the database still exist?`);
+  }
+  console.error();
+  process.exit(1);
 }
 
 // wrangler prints progress lines before the JSON, so take from the first brace.
