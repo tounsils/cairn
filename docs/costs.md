@@ -76,6 +76,44 @@ Better still, do not send a daily email. The entire thesis of this product is th
 | **Infrastructure total** | | **~$7/month** |
 | Stripe | 2.9% + $0.30, billed annually | $97 |
 
+## Voice (Vertex / Gemini): not for the MVP
+
+**Answer first: no, and most forms of it fight the design.**
+
+- **It spoils a visual puzzle.** Narrating the round either leaks information or slows it down.
+- **Voice input is worse than the existing input.** You drop a pin on a map. Saying "Portugal" is less precise and takes longer.
+- **A daily game should take two to four minutes.** Audio is inherently slower than reading, and respecting the player's time is precisely why the daily format works.
+- **Live voice implies co-presence.** The entire product is built so a family across six time zones never has to be awake at once.
+- **An AI hint-giver is the wrong monetisation.** [`concept.md`](concept.md) argues archives over hints because hints tax your most frustrated users. A voice hint assistant doubles down on the mechanic to avoid.
+- **Nothing is validated yet.** The landing page has collected zero signups. Adding an AI layer to an unvalidated product is scope creep in its purest form.
+
+### The one version that would be worth building later
+
+A **45-second spoken "dispatch" about today's place, played after the guess**. It is the educational payoff rather than a game mechanic, it is optional and skippable, it is shareable, and it does not touch the puzzle. It also reuses the pattern already built in [P-roadside](../../P-roadside/), which is authored audio narration over geography.
+
+### What it costs, and the same lesson as the map
+
+In a daily game **every player gets the same round**, so the audio is rendered once and served as a file. Generating it per request buys nothing:
+
+| Approach | Launch | Target | Success |
+|---|---:|---:|---:|
+| Batch once per round, Standard voice | **$0** | **$0** | **$0** |
+| Batch once per round, Chirp 3 HD | **$0.81** | **$0.81** | **$0.81** |
+| Per user, Standard voice | $27 | $416 | $4,304 |
+| Per user, Neural2 | $173 | $1,728 | $17,280 |
+| Per user, Chirp 3 HD | $324 | $3,240 | $32,400 |
+| Gemini Live, 2 min conversation per session | $883 | **$8,832** | $88,320 |
+
+At the target tier that is **$0.81 versus $3,240 for identical audio — a 4,000x difference**. Note that the batched row is *flat across every tier*: 30 rounds a month is 30 rounds a month whether you have 100 crews or 10,000. It does not scale with users at all, because the content is shared.
+
+Gemini Live conversational voice comes to **353% of revenue**. It is not a budgeting question, it is a different business.
+
+Writing the scripts with Gemini Flash costs about **$0.01/month** — 30 generations. The language model is never the expensive part; speaking to every user individually is.
+
+### If it is ever built, gate the content
+
+The discipline already recorded for P-roadside applies harder here: **the content is the asset, not the model.** An LLM writing geography facts will confabulate, and in a daily game the same wrong fact goes to every player simultaneously and is the thing they all screenshot. Generate, verify against cited sources, then synthesise — the same eval-corpus gate as the round generator. At 30 items a month that is entirely affordable; at 120,000 it would be impossible, which is one more argument for batching.
+
 ## What would actually change this
 
 The model is only as good as its assumptions, and these are the ones worth arguing with:

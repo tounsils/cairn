@@ -34,6 +34,11 @@ const P = {
   lambda: { freeReq: 1e6, perReq: 0.2 / 1e6, freeGbs: 400_000, perGbs: 0.0000166667 },
   dynamo: { wru: 1.25 / 1e6, rru: 0.25 / 1e6 },
   ses: { per1k: 0.1 },
+  // Google Cloud TTS, per million characters. Standard has 4M chars/mo free.
+  tts: { standard: 4, neural2: 16, chirpHd: 30, studio: 160, freeStandardChars: 4e6 },
+  // Gemini Live conversational audio, ~25 tokens/sec of audio.
+  geminiLive: { perMinute: 0.0368 },
+  geminiFlashText: { perMTokens: 0.3 }, // writing the script, not speaking it
   resend: { per1k: 0.9 }, // ~$90 for 100k on their scale tiers
   mapbox: { freeLoads: 50_000, per1k: 5.0 }, // $3/1k above 200k; using the common rate
   maptiler: { flatUnlimited: 295 },
@@ -148,4 +153,47 @@ for (const r of rows) {
       `   (infra alone ${infra.toFixed(2)}%)`
   );
 }
+
+/* ===========================================================================
+   VOICE
+   A ~45-second spoken "dispatch" about today's place, played AFTER the guess.
+   The same structural lesson as the map: in a daily game every player gets the
+   SAME round, so the audio is generated once and served as a file. Generating
+   it per request buys nothing and costs four thousand times more.
+   =========================================================================== */
+const VOICE = { words: 150, charsPerWord: 6, roundsPerMonth: 30, liveMinutesPerSession: 2 };
+const charsPerRound = VOICE.words * VOICE.charsPerWord;
+
+console.log("\n\nVOICE, IF IT IS EVER ADDED\n");
+console.log(
+  `  a ${VOICE.words}-word post-round dispatch = ${charsPerRound.toLocaleString()} characters\n`
+);
+
+const ttsCost = (chars, rate, freeChars = 0) => (Math.max(0, chars - freeChars) / 1e6) * rate;
+
+head("approach");
+rule();
+
+// Batched: 30 rounds a month, one render each, served as a static file.
+const batchedChars = charsPerRound * VOICE.roundsPerMonth;
+line("batch once/round, Standard voice", () => ttsCost(batchedChars, P.tts.standard, P.tts.freeStandardChars));
+line("batch once/round, Chirp 3 HD", () => ttsCost(batchedChars, P.tts.chirpHd));
+
+// Per request: the same words, re-synthesised for every single player.
+line("per user, Standard voice", (r) => ttsCost(r.sessions * charsPerRound, P.tts.standard, P.tts.freeStandardChars));
+line("per user, Neural2", (r) => ttsCost(r.sessions * charsPerRound, P.tts.neural2));
+line("per user, Chirp 3 HD", (r) => ttsCost(r.sessions * charsPerRound, P.tts.chirpHd));
+
+// Conversational: a live voice agent per session.
+line("Gemini Live, 2 min/session", (r) => r.sessions * VOICE.liveMinutesPerSession * P.geminiLive.perMinute);
+
+console.log();
+const t = rows[1]; // Target tier
+const batched = ttsCost(batchedChars, P.tts.chirpHd);
+const perUser = ttsCost(t.sessions * charsPerRound, P.tts.chirpHd);
+const live = t.sessions * VOICE.liveMinutesPerSession * P.geminiLive.perMinute;
+console.log(`  At Target, identical audio: batched ${money(batched)} vs per-user ${money(perUser)}`);
+console.log(`  That is a ${Math.round(perUser / Math.max(batched, 0.01)).toLocaleString()}x difference for the same words.`);
+console.log(`  Gemini Live conversational: ${money(live)}/mo = ${(live / t.revenueMo * 100).toFixed(0)}% of revenue.`);
+console.log(`  Writing the scripts with Gemini Flash: ${money((30 * 1000 / 1e6) * P.geminiFlashText.perMTokens)}/mo (rounding error).`);
 console.log();
