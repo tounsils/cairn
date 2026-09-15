@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cairn-signup",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-09-15",
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cairn",
+      "database_id": "c4339d08-a540-433d-b71e-a5d929463f9c"
+    }
+  ],
+
+  "vars": {
+    // The landing page's origin. Anything else gets no CORS header, so a copy
+    // of the form hosted elsewhere cannot post into this database.
+    "ALLOWED_ORIGIN": "https://tounsils.github.io"
+  },
+
+  // No `limits` block on purpose: CPU limits are a paid-plan feature, and the
+  // free plan already caps CPU per invocation and requests per day. The
+  // property that matters is that the free plan STOPS SERVING rather than
+  // billing, so an unauthenticated public endpoint cannot run up an invoice.
+  // Nothing here requires a card or a paid plan.
+
+  "observability": {
+    "enabled": true
+  }
+}
