@@ -11,9 +11,13 @@
     "check": "npm run lint && npm test",
     "lint": "node scripts/check.mjs",
     "serve": "node --run serve:py || python -m http.server 8000 --directory site",
-    "serve:py": "python -m http.server 8000 --directory site"
+    "serve:py": "python -m http.server 8000 --directory site",
+    "results": "node infra/cloudflare/results.mjs"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "wrangler": "^4.131.2"
   }
 }
