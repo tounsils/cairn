@@ -18,7 +18,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { summarise } from "../lib/signup.mjs";
+import { summarise, verdict } from "../lib/signup.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const wrangler = join(root, "node_modules", "wrangler", "bin", "wrangler.js");
@@ -111,14 +111,9 @@ if (rows.length === 0) {
 // definition instead of leaving a mix of old and new.
 const s = summarise(rows);
 
-const verdict =
-  s.namedPct < 20
-    ? ["KILL", "They want a puzzle, not a crew. The differentiator did not land."]
-    : s.total >= 100
-      ? ["BUILD", "100+ signups and the crew idea landed. Generator and eval corpus first."]
-      : s.total >= 30
-        ? ["THIN", "Real but weak. One rewrite, one new channel, two more weeks."]
-        : ["NO SIGNAL", "Too little traffic to read. Fix distribution, do not call it a verdict."];
+// Imported rather than inlined. The first version of this decided the
+// verdict here, untested, and returned KILL on a single signup.
+const v = verdict(s.total, s.namedPct);
 
 console.log(`
   total            ${s.total}
@@ -131,8 +126,8 @@ for (const [src, n] of Object.entries(s.bySrc).sort((a, b) => b[1] - a[1])) {
 }
 
 console.log(`
-  VERDICT: ${verdict[0]}
-  ${verdict[1]}`);
+  VERDICT: ${v.code}
+  ${v.why}`);
 
 if (s.warm > 0 && s.cold > 0) {
   const coldRows = rows.filter((r) => !/^(personal|friends|family|linkedin)/.test(r.src ?? ""));

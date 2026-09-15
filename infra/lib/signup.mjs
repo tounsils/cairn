@@ -143,6 +143,39 @@ export function namedACrew(crew) {
   return /\s/.test(v) || v.length >= 8;
 }
 
+/** Thresholds from docs/validation.md, in one place rather than three. */
+export const MIN_SAMPLE = 30;
+export const KILL_THRESHOLD_PCT = 20;
+export const BUILD_THRESHOLD = 100;
+
+/**
+ * Turn the numbers into the decision.
+ *
+ * ORDER MATTERS, and getting it wrong is how a working idea gets killed. The
+ * sample-size floor is checked FIRST. One signup that did not name a crew is
+ * 0%, which trips the kill threshold — but one person is not evidence of
+ * anything. The first version of this checked the percentage first and duly
+ * returned KILL on a single row.
+ */
+export function verdict(total, namedPct) {
+  if (total < MIN_SAMPLE) {
+    return {
+      code: "NO SIGNAL",
+      why:
+        total === 0
+          ? "Nothing collected yet."
+          : `Only ${total} signup${total === 1 ? "" : "s"}. Below ${MIN_SAMPLE} there is nothing to read in either direction — that is a traffic problem, not a verdict.`,
+    };
+  }
+  if (namedPct < KILL_THRESHOLD_PCT) {
+    return { code: "KILL", why: "They want a puzzle, not a crew. The differentiator did not land." };
+  }
+  if (total >= BUILD_THRESHOLD) {
+    return { code: "BUILD", why: "100+ signups and the crew idea landed. Generator and eval corpus first." };
+  }
+  return { code: "THIN", why: "Real but weak. One rewrite, one new channel, two more weeks." };
+}
+
 export function summarise(records) {
   const total = records.length;
   const named = records.filter((r) => namedACrew(r.crew)).length;
