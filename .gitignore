@@ -15,3 +15,7 @@ signups*.json
 # AWS build artefacts
 infra/aws/build/
 infra/aws/*.zip
+
+# Wrangler local cache (account id/name, no secrets, but not ours to commit)
+.wrangler/
+**/.wrangler/
