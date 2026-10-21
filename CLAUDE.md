@@ -65,3 +65,5 @@ git config user.email "tounsils@gmail.com"
 ```
 
 No `Co-authored-by` lines. No AI attribution in commits or PR bodies.
+
+@AGENTS.md
